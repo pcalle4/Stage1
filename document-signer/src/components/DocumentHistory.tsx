@@ -8,7 +8,7 @@ type StoredDocument = {
   signer: string;
   timestamp: number;
   signature: string;
-  blockNumber: bigint;
+  blockNumber: number;
   txHash: string;
 };
 
@@ -34,6 +34,7 @@ export default function DocumentHistory() {
 
         const iface = new Interface(DocumentRegistryAbi);
         const eventFragment = iface.getEvent("DocumentStored");
+        if (!eventFragment) throw new Error("Event DocumentStored not found in ABI");
         const topic = eventFragment.topicHash;
 
         const logs = await provider.getLogs({
@@ -46,6 +47,7 @@ export default function DocumentHistory() {
         const items: StoredDocument[] = logs
           .map((log) => {
             const parsed = iface.parseLog(log);
+            if (!parsed) return null;
             const [hash, signer, timestamp, signature] = parsed.args;
             return {
               hash,
@@ -56,6 +58,7 @@ export default function DocumentHistory() {
               txHash: log.transactionHash,
             };
           })
+          .filter((item): item is StoredDocument => item !== null)
           .reverse();
 
         setDocuments(items);
