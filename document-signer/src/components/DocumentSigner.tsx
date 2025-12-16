@@ -34,6 +34,7 @@ export default function DocumentSigner() {
     if (typeof err === "string") return err;
     const reason = err.reason || err.data?.message || err.error?.message || err.message;
     if (reason) {
+      // Mensajes más legibles para revertencias frecuentes.
       if (reason.includes("Document already stored")) return "El documento ya fue almacenado.";
       return reason;
     }

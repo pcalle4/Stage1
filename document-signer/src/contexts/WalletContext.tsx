@@ -10,10 +10,13 @@ import { getBrowserProvider } from "../utils/ethers";
 
 type WalletContextValue = {
   address: string | null;
+  accounts: string[];
+  selectedAccount: string | null;
   isConnected: boolean;
   chainId: string | null;
   isCorrectNetwork: boolean;
   connectWallet: () => Promise<void>;
+  selectAccount: (account: string) => void;
   disconnectWallet: () => void;
 };
 
@@ -23,6 +26,8 @@ const TARGET_CHAIN_ID = import.meta.env.VITE_CHAIN_ID || "31337";
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
+  const [accounts, setAccounts] = useState<string[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const [chainId, setChainId] = useState<string | null>(null);
 
   const isConnected = useMemo(() => !!address, [address]);
@@ -44,25 +49,32 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const signer = await provider.getSigner();
     const signerAddress = await signer.getAddress();
     setAddress(signerAddress);
+    const accs = await provider.send("eth_accounts", []);
+    setAccounts(accs);
+    setSelectedAccount(accs[0] ?? signerAddress);
 
     await syncNetwork();
   }, [syncNetwork]);
 
   const disconnectWallet = useCallback(() => {
     setAddress(null);
+    setAccounts([]);
+    setSelectedAccount(null);
     setChainId(null);
   }, []);
 
   useEffect(() => {
     if (!window.ethereum) return;
 
-    const handleAccountsChanged = (accounts: string[]) => {
-      if (!accounts.length) {
-        disconnectWallet();
-        return;
-      }
-      setAddress(accounts[0]);
-    };
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (!accounts.length) {
+          disconnectWallet();
+          return;
+        }
+        setAddress(accounts[0]);
+        setAccounts(accounts);
+        setSelectedAccount(accounts[0]);
+      };
 
     const handleChainChanged = (nextChainId: string) => {
       // MetaMask provides chainId as hex string
@@ -87,6 +99,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         const accounts = await provider.send("eth_accounts", []);
         if (accounts && accounts.length) {
           setAddress(accounts[0]);
+          setAccounts(accounts);
+          setSelectedAccount(accounts[0]);
           await syncNetwork();
         }
       } catch {
@@ -100,12 +114,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     () => ({
       address,
       isConnected,
+      accounts,
+      selectedAccount,
       chainId,
       isCorrectNetwork,
       connectWallet,
+      selectAccount: setSelectedAccount,
       disconnectWallet,
     }),
-    [address, isConnected, chainId, isCorrectNetwork],
+    [address, accounts, selectedAccount, isConnected, chainId, isCorrectNetwork],
   );
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;

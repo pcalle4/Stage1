@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getBytes, verifyMessage } from "ethers";
+import { getBytes, getAddress, verifyMessage } from "ethers";
 import { useWallet } from "../hooks/useWallet";
 import { useDocumentRegistry } from "../hooks/useContract";
 import { useFileHash } from "../hooks/useFileHash";
@@ -22,6 +22,8 @@ export default function DocumentVerifier() {
   const [storedSignature, setStoredSignature] = useState<string | null>(null);
   const [onChainValid, setOnChainValid] = useState<boolean | null>(null);
   const [offChainValid, setOffChainValid] = useState<boolean | null>(null);
+  const [recoveredAddress, setRecoveredAddress] = useState<string | null>(null);
+  const [signerMismatch, setSignerMismatch] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
@@ -31,6 +33,8 @@ export default function DocumentVerifier() {
     setStoredSignature(null);
     setOnChainValid(null);
     setOffChainValid(null);
+    setRecoveredAddress(null);
+    setSignerMismatch(null);
     setVerifyError(null);
   };
 
@@ -57,13 +61,17 @@ export default function DocumentVerifier() {
       setVerifyError("Primero calcula el hash");
       return;
     }
-    if (!inputSigner) {
-      setVerifyError("Ingresa la dirección del firmante esperado");
+    let normalizedSigner: string;
+    try {
+      normalizedSigner = getAddress(inputSigner.trim());
+    } catch {
+      setVerifyError("Dirección de firmante no válida");
       return;
     }
 
     setIsVerifying(true);
     try {
+      // Paso 1: verificar si el hash existe on-chain.
       const exists: boolean = await contract.isDocumentStored(hash);
       if (!exists) {
         setVerifyError("El documento no está almacenado en la blockchain");
@@ -75,11 +83,18 @@ export default function DocumentVerifier() {
       setTimestamp(Number(doc.timestamp));
       setStoredSignature(doc.signature);
 
-      const isOnChainValid: boolean = await contract.verifyDocument(hash, inputSigner, doc.signature);
-      setOnChainValid(isOnChainValid);
+      // Paso 2: verificación on-chain usando el contrato.
+      const isOnChainValid: boolean = await contract.verifyDocument(hash, normalizedSigner, doc.signature);
+      const signerMatches = doc.signer.toLowerCase() === normalizedSigner.toLowerCase();
+      setOnChainValid(isOnChainValid && signerMatches);
+      if (!signerMatches) {
+        setSignerMismatch("La dirección ingresada no coincide con el signer almacenado on-chain.");
+      }
 
+      // Paso 3: verificación off-chain recuperando la dirección desde la firma.
       const recovered = verifyMessage(getBytes(hash), doc.signature);
-      const isOffChainValid = recovered.toLowerCase() === inputSigner.toLowerCase();
+      setRecoveredAddress(recovered);
+      const isOffChainValid = recovered.toLowerCase() === normalizedSigner.toLowerCase();
       setOffChainValid(isOffChainValid);
     } catch (err: any) {
       console.error("Error al verificar:", err);
@@ -139,6 +154,12 @@ export default function DocumentVerifier() {
           {hashError || verifyError}
         </p>
       )}
+      {signerMismatch && (
+        <p className="text-xs text-amber-600 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2">
+          {/* Muestra cuando la dirección ingresada difiere del signer guardado. */}
+          {signerMismatch}
+        </p>
+      )}
 
       <div className="space-y-2 text-sm">
         {contractSigner && (
@@ -191,6 +212,28 @@ export default function DocumentVerifier() {
           </span>
         )}
       </div>
+
+      {(recoveredAddress || onChainValid !== null || offChainValid !== null) && (
+        <div className="rounded-2xl border border-slate-200/60 bg-white/80 p-3 text-xs text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+          <p className="font-semibold text-slate-800 dark:text-slate-100">¿Qué significan?</p>
+          <ul className="mt-1 space-y-1 list-disc pl-4">
+            <li>
+              <span className="font-semibold">On-chain válido:</span> el contrato confirma que el hash, la firma
+              almacenada y el firmante guardado coinciden con la dirección que ingresaste.
+            </li>
+            <li>
+              <span className="font-semibold">Off-chain válido:</span> al recuperar la dirección desde la firma en el
+              frontend, coincide con la dirección que ingresaste.
+            </li>
+            {recoveredAddress && (
+              <li>
+                <span className="font-semibold">Dirección recuperada:</span>{" "}
+                <span className="font-mono">{recoveredAddress}</span>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

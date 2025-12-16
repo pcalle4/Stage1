@@ -8,9 +8,9 @@ export function getBrowserProvider() {
   return new BrowserProvider(window.ethereum);
 }
 
-export async function getDocumentRegistryContract() {
+export async function getDocumentRegistryContract(preferredAddress?: string) {
   const provider = getBrowserProvider();
-  const signer = await provider.getSigner();
+  const signer = preferredAddress ? await provider.getSigner(preferredAddress) : await provider.getSigner();
 
   const address = import.meta.env.VITE_CONTRACT_ADDRESS;
   if (!address) throw new Error("Falta VITE_CONTRACT_ADDRESS en .env");

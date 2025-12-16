@@ -4,7 +4,7 @@ import { useWallet } from "./useWallet";
 import { getDocumentRegistryContract } from "../utils/ethers";
 
 export function useDocumentRegistry() {
-  const { isConnected } = useWallet();
+  const { isConnected, selectedAccount } = useWallet();
   const [contract, setContract] = useState<Contract | null>(null);
 
   useEffect(() => {
@@ -15,14 +15,14 @@ export function useDocumentRegistry() {
 
     (async () => {
       try {
-        const instance = await getDocumentRegistryContract();
+        const instance = await getDocumentRegistryContract(selectedAccount || undefined);
         setContract(instance);
       } catch (error) {
         console.error("Error creando contrato:", error);
         setContract(null);
       }
     })();
-  }, [isConnected]);
+  }, [isConnected, selectedAccount]);
 
   return contract;
 }

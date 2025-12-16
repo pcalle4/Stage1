@@ -10,6 +10,9 @@ contract DocumentRegistry is IDocumentRegistry {
 
     mapping(bytes32 => Document) private documents;
 
+    // Un documento existe si documents[hash].signer != address(0).
+    // Guardamos la firma exacta enviada por el usuario; la validez se comprueba
+    // reconstruyendo el mensaje firmado (EIP-191) y recuperando el signer.
     function storeDocumentHash(bytes32 hash, uint256 timestamp, bytes calldata signature) external override {
         if (documents[hash].signer != address(0)) revert("Document already stored");
         if (timestamp == 0) revert("Invalid timestamp");
@@ -36,6 +39,7 @@ contract DocumentRegistry is IDocumentRegistry {
         override
         returns (bool)
     {
+        // Reutiliza la firma almacenada y compara contra la dirección esperada.
         Document storage document = documents[hash];
         if (document.signer == address(0)) {
             emit DocumentVerified(hash, signer, false);

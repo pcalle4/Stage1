@@ -2,10 +2,20 @@ import Layout from "./components/Layout";
 import DocumentSigner from "./components/DocumentSigner";
 import DocumentVerifier from "./components/DocumentVerifier";
 import DocumentHistory from "./components/DocumentHistory";
+import WalletSelector from "./components/WalletSelector";
 import { useWallet } from "./hooks/useWallet";
+import { useState } from "react";
 
 export default function App() {
   const { isConnected, isCorrectNetwork } = useWallet();
+  const [tab, setTab] = useState<"sign" | "verify" | "history">("sign");
+
+  const tabClass = (current: typeof tab) =>
+    `rounded-full px-5 py-2.5 text-sm font-semibold border transition shadow-sm ${
+      tab === current
+        ? "bg-gradient-to-r from-sky-500 to-cyan-400 text-slate-950 border-transparent"
+        : "bg-white/85 text-slate-800 border-slate-200/70 hover:border-sky-300 hover:text-slate-900 dark:bg-white/5 dark:text-slate-100 dark:border-white/15 dark:hover:border-sky-300"
+    }`;
 
   return (
     <Layout>
@@ -30,35 +40,55 @@ export default function App() {
 
         {isConnected && isCorrectNetwork && (
           <div className="space-y-6">
-            <section className="space-y-3 surface-card">
-              <header className="flex items-center justify-between gap-2">
-                <h3 className="text-base md:text-lg font-semibold tracking-tight">
-                  Firmar documento
-                </h3>
-                <span className="text-[11px] uppercase tracking-wide text-slate-400">Paso 1</span>
-              </header>
-              <DocumentSigner />
-            </section>
+            <WalletSelector />
 
-            <section className="space-y-3 surface-card">
-              <header className="flex items-center justify-between gap-2">
-                <h3 className="text-base md:text-lg font-semibold tracking-tight">
-                  Verificar documento
-                </h3>
-                <span className="text-[11px] uppercase tracking-wide text-slate-400">Paso 2</span>
-              </header>
-              <DocumentVerifier />
-            </section>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setTab("sign")} className={tabClass("sign")}>
+                Firmar
+              </button>
+              <button onClick={() => setTab("verify")} className={tabClass("verify")}>
+                Verificar
+              </button>
+              <button onClick={() => setTab("history")} className={tabClass("history")}>
+                Historial
+              </button>
+            </div>
 
-            <section className="space-y-3 surface-card">
-              <header className="flex items-center justify-between gap-2">
-                <h3 className="text-base md:text-lg font-semibold tracking-tight">
-                  Historial
-                </h3>
-                <span className="text-[11px] uppercase tracking-wide text-slate-400">Registros</span>
-              </header>
-              <DocumentHistory />
-            </section>
+            {tab === "sign" && (
+              <section className="space-y-3 surface-card">
+                <header className="flex items-center justify-between gap-2">
+                  <h3 className="text-base md:text-lg font-semibold tracking-tight">
+                    Firmar documento
+                  </h3>
+                  <span className="text-[11px] uppercase tracking-wide text-slate-400">Paso 1</span>
+                </header>
+                <DocumentSigner />
+              </section>
+            )}
+
+            {tab === "verify" && (
+              <section className="space-y-3 surface-card">
+                <header className="flex items-center justify-between gap-2">
+                  <h3 className="text-base md:text-lg font-semibold tracking-tight">
+                    Verificar documento
+                  </h3>
+                  <span className="text-[11px] uppercase tracking-wide text-slate-400">Paso 2</span>
+                </header>
+                <DocumentVerifier />
+              </section>
+            )}
+
+            {tab === "history" && (
+              <section className="space-y-3 surface-card">
+                <header className="flex items-center justify-between gap-2">
+                  <h3 className="text-base md:text-lg font-semibold tracking-tight">
+                    Historial
+                  </h3>
+                  <span className="text-[11px] uppercase tracking-wide text-slate-400">Registros</span>
+                </header>
+                <DocumentHistory />
+              </section>
+            )}
           </div>
         )}
       </div>
