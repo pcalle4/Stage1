@@ -37,7 +37,6 @@ contract DocumentRegistryTest is Test {
         IDocumentRegistry.Document memory info = registry.getDocumentInfo(hash);
         assertEq(info.hash, hash, "Stored hash mismatch");
         assertEq(info.signer, signer, "Signer should match caller");
-        assertTrue(info.exists, "exists flag should be true");
         assertEq(info.timestamp, timestamp, "Timestamp mismatch");
         assertEq(info.signature, signature, "Signature mismatch");
     }

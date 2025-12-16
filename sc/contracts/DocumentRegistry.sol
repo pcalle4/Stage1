@@ -11,7 +11,7 @@ contract DocumentRegistry is IDocumentRegistry {
     mapping(bytes32 => Document) private documents;
 
     function storeDocumentHash(bytes32 hash, uint256 timestamp, bytes calldata signature) external override {
-        if (documents[hash].exists) revert("Document already stored");
+        if (documents[hash].signer != address(0)) revert("Document already stored");
         if (timestamp == 0) revert("Invalid timestamp");
 
         bytes32 ethSignedHash = hash.toEthSignedMessageHash();
@@ -25,8 +25,7 @@ contract DocumentRegistry is IDocumentRegistry {
             hash: hash,
             timestamp: timestamp,
             signer: msg.sender,
-            signature: signature,
-            exists: true
+            signature: signature
         });
 
         emit DocumentStored(hash, msg.sender, timestamp, signature);
@@ -38,7 +37,7 @@ contract DocumentRegistry is IDocumentRegistry {
         returns (bool)
     {
         Document storage document = documents[hash];
-        if (!document.exists) {
+        if (document.signer == address(0)) {
             emit DocumentVerified(hash, signer, false);
             return false;
         }
@@ -57,17 +56,17 @@ contract DocumentRegistry is IDocumentRegistry {
 
     function getDocumentInfo(bytes32 hash) external view override returns (Document memory) {
         Document memory document = documents[hash];
-        if (!document.exists) revert("Document not found");
+        if (document.signer == address(0)) revert("Document not found");
         return document;
     }
 
     function isDocumentStored(bytes32 hash) external view override returns (bool) {
-        return documents[hash].exists;
+        return documents[hash].signer != address(0);
     }
 
     function getDocumentSignature(bytes32 hash) external view override returns (bytes memory) {
         Document memory document = documents[hash];
-        if (!document.exists) revert("Document not found");
+        if (document.signer == address(0)) revert("Document not found");
         return document.signature;
     }
 }

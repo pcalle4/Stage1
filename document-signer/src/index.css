@@ -1,68 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  color-scheme: light;
+  font-family: system-ui, -apple-system, "SF Pro Text", "SF Pro Display", "Segoe UI",
+    sans-serif;
+  letter-spacing: -0.01em;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.theme-dark {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(109, 40, 217, 0.08), transparent 28%),
+    radial-gradient(circle at 50% 90%, rgba(14, 165, 233, 0.05), transparent 32%),
+    #020617;
+  color: #e2e8f0;
+}
+
+body.theme-light {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 122, 255, 0.08), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(88, 86, 214, 0.08), transparent 28%),
+    linear-gradient(180deg, #fdfdff 0%, #f3f6fb 40%, #eef3fa 100%);
+  color: #0f172a;
+}
+
+#root {
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+* {
+  scroll-behavior: smooth;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.glass-card {
+  @apply rounded-3xl border border-white/10 bg-white/5 shadow-[0_18px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.pill {
+  @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold;
+}
+
+body.theme-dark .pill {
+  @apply bg-white/10 text-slate-100;
+}
+
+body.theme-light .pill {
+  @apply bg-slate-900/10 text-slate-800;
+}
+
+.surface-card {
+  @apply rounded-2xl border p-4 md:p-5;
+}
+
+body.theme-dark .surface-card {
+  @apply border-white/10 bg-white/5 text-slate-50 shadow-[0_18px_40px_rgba(0,0,0,0.3)];
+}
+
+body.theme-light .surface-card {
+  @apply border-slate-200/70 bg-white/90 text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.12)];
 }

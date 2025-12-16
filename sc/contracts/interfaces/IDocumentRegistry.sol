@@ -7,7 +7,6 @@ interface IDocumentRegistry {
         uint256 timestamp;
         address signer;
         bytes signature;
-        bool exists;
     }
 
     event DocumentStored(bytes32 indexed hash, address indexed signer, uint256 timestamp, bytes signature);
